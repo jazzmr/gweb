@@ -23,5 +23,5 @@ func main() {
 	fmt.Println(c.Server)
 
 	log.Println("gweb start success ... ...")
-	http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), gweb.MRouter)
+	http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), gweb.GRouter)
 }

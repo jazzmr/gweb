@@ -1,11 +1,13 @@
 package controller
 
-import "gweb"
+import (
+	"net/http"
+)
 
 type LoginController struct {
-	*gweb.Controller
 }
 
-func (login *LoginController) Get() {
-
+func (c *LoginController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	w.Write([]byte("hello gweb!"))
 }

@@ -1,11 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"gweb"
+	_ "gweb/router"
+	"log"
+	"net/http"
+	"time"
 )
 
 func main() {
-	c := gweb.Controller{}
-	fmt.Printf("gweb start... ...%v\n", c)
+	time.Sleep(5 * time.Second)
+	log.Println("gweb start success ... ...")
+	http.ListenAndServe(":8080", gweb.MRouter)
 }

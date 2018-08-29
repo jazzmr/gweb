@@ -13,8 +13,4 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-.idea/encodings.xml
-.idea/gweb.iml
-.idea/misc.xml
-.idea/modules.xml
-.idea/workspace.xml
+.idea

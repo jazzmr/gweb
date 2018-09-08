@@ -1,26 +1,19 @@
 package gweb
 
 import (
-	"github.com/gorilla/mux"
-	"log"
+	"fmt"
 	"net/http"
-	"reflect"
 )
 
-var GRouter *mux.Router
-
-func init() {
-
-	if GRouter == nil {
-		GRouter = mux.NewRouter().StrictSlash(true)
-	}
-
-	log.Println("init mux.Router success.")
+type Controller struct {
+	Handler http.Handler
+	Pattern string
 }
 
-func Router(uri string, handler http.Handler, methodName string) {
+func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
-	t := reflect.TypeOf(handler)
+	fmt.Println("Controller ServeHTTP... ...")
 
-	GRouter.Methods(methodName).Path(uri).Name(t.Name()).Handler(handler)
+	c.Handler.ServeHTTP(rw, r)
+
 }

@@ -1,16 +1,14 @@
 package controller
 
-import "net/http"
+import (
+	"fmt"
+	"gweb"
+)
 
 type HelloController struct {
-	Url    string
-	Method string
+	gweb.Controller
 }
 
-func (c *HelloController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (c *HelloController) hello1() {
-
+func (h *HelloController) hello() {
+	fmt.Println("HelloController")
 }

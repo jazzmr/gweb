@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gweb"
 	"gweb/conf"
-	_ "gweb/router"
 	"log"
 	"net/http"
 	"time"
@@ -28,6 +27,19 @@ func main() {
 
 	fmt.Println(c.Server)
 
+	h := &gweb.Controller{
+		Handler: http.HandlerFunc(myFunc),
+		Pattern: "localhost",
+	}
+
 	log.Println("gweb start success ... ...")
-	http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), gweb.GRouter)
+	http.ListenAndServe(fmt.Sprintf(":%d", c.Server.Port), h)
+}
+
+func myFunc(rw http.ResponseWriter, r *http.Request) {
+
+	time.Sleep(5 * time.Second)
+
+	fmt.Println("hello world!")
+	rw.Write([]byte("hello world!"))
 }

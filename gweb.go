@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -83,7 +84,8 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 
 	// handler is nil, give a default handler
 	if ci == nil {
-
+		rw.Write([]byte("there is no mapping handler found."))
+		return
 	}
 
 	ci.Init(&context.Context{ResponseWriter: rw})
@@ -100,8 +102,12 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	// 3. 再看看无参数的调用方法
 	methodValue := getValue.MethodByName(utils.UpFirstLetter(mappingMethod))
 
-	args := make([]reflect.Value, 0)
+	if methodValue.Kind() != reflect.Func {
+		rw.Write([]byte("there is no mapping method found."))
+		return
+	}
 
+	args := make([]reflect.Value, 0)
 	methodValue.Call(args)
 
 	//fmt.Printf("hello world, %s, %s", m, uri)
@@ -109,7 +115,6 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Get() {
-
 }
 
 func (c *Controller) Post() {
@@ -132,7 +137,38 @@ func Router(path string, c ControllerInterface, mappingMethods ...string) {
 	Add(path, c)
 }
 
-func parseURI(uri string) requestURI {
+func parseURI(uri string) *requestURI {
+	uris := strings.Split(uri, "/")
 
-	return requestURI{}
+	uris = uris[1:]
+	r := &requestURI{}
+
+	r.contextPath = "/" + uris[0]
+
+	if len(uris) > 1 {
+		r.mapping = "/" + uris[1]
+	}
+
+	if len(uris) > 2 {
+		r.method = uris[2]
+	}
+
+	if len(uris) > 3 {
+		tail := uris[len(uris)-1]
+		if strings.Contains(tail, "?") {
+			r.pathParams = uris[3 : len(uris)-1]
+			rp := strings.Split(tail, "&")
+			rpm := make(map[string]string, 3)
+			for _, v := range rp {
+				pv := strings.Split(v, "=")
+				rpm[pv[0]] = pv[1]
+			}
+
+			r.requestParams = rpm
+		} else {
+			r.pathParams = uris[3:]
+		}
+	}
+
+	return r
 }

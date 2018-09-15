@@ -10,8 +10,7 @@ type HelloController struct {
 }
 
 func (h *HelloController) Hello() {
-	h.Ctx.WriteString("hello controller Hello")
-	fmt.Println("hello controller Hello")
+	h.Ctx.WriteString("hello world")
 }
 
 func (h *HelloController) Get() {

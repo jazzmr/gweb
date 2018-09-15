@@ -134,4 +134,5 @@ func Router(path string, c ControllerInterface, mappingMethods ...string) {
 
 func parseURI(uri string) requestURI {
 
+	return requestURI{}
 }

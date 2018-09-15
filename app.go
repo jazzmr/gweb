@@ -1,7 +1,10 @@
 package gweb
 
+import "reflect"
+
 type App struct {
-	mappings map[string]ControllerInterface
+	mappings       map[string]ControllerInterface
+	methodMappings map[string]map[string]reflect.Value
 }
 
 var (
@@ -10,12 +13,9 @@ var (
 
 func init() {
 	gApp = &App{
-		mappings: make(map[string]ControllerInterface),
+		mappings:       make(map[string]ControllerInterface),
+		methodMappings: make(map[string]map[string]reflect.Value),
 	}
-}
-
-func Add(path string, c ControllerInterface) {
-	gApp.mappings[path] = c
 }
 
 func getHandler(mapping string) ControllerInterface {

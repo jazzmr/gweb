@@ -55,7 +55,38 @@ func (c *Controller) Input() url.Values {
 }
 
 func Router(path string, c ControllerInterface, mappingMethods ...string) {
-	Add(path, c)
+	for _, v := range mappingMethods {
+		mappings := make(map[string]reflect.Value)
+
+		if strings.Contains(v, ",") {
+			m := strings.Split(v, ",")
+			for _, e := range m {
+				n := strings.Split(e, ":")
+
+				mappingMethod(c, n, mappings)
+			}
+		} else {
+			n := strings.Split(v, ":")
+			mappingMethod(c, n, mappings)
+		}
+
+		gApp.methodMappings[path] = mappings
+	}
+	gApp.mappings[path] = c
+}
+
+/**
+(path and http.Method) -> func mappings
+*/
+func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflect.Value) {
+	handle := reflect.ValueOf(c)
+	handleMethod := handle.MethodByName(utils.UpFirstLetter(n[1]))
+	if handleMethod.Kind() == reflect.Func {
+
+		mappings[n[0]] = handleMethod
+	} else {
+		// TODO error mapping method(path, n[0], n[1])
+	}
 }
 
 /**

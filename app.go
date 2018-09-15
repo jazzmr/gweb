@@ -18,9 +18,13 @@ func init() {
 	}
 }
 
-func getHandler(mapping string) ControllerInterface {
-	if mapping == "" {
-		return nil
+func getHandleMethod(path, httpMethod string) reflect.Value {
+	if path == "" {
+		return reflect.Value{}
 	}
-	return gApp.mappings[mapping]
+
+	if v, ok := gApp.methodMappings[path]; ok {
+		return v[httpMethod]
+	}
+	return reflect.Value{}
 }

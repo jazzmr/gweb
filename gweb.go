@@ -28,11 +28,11 @@ type Controller struct {
 }
 
 func Run() {
-	conf := conf.GetConfig()
+	config := conf.GetConfig()
 
 	time.Sleep(1 * time.Second)
 
-	fmt.Println(conf.Server)
+	fmt.Println(config.Server)
 
 	h := &Controller{
 		Handler: http.HandlerFunc(dispatch),
@@ -40,7 +40,7 @@ func Run() {
 	}
 
 	log.Println("gweb start success ... ...")
-	http.ListenAndServe(fmt.Sprintf(":%d", conf.Server.Port), h)
+	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
 }
 
 func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -54,6 +54,11 @@ func (c *Controller) Input() url.Values {
 	return c.Ctx.Request.Form
 }
 
+/**
+add mappings
+path -> Controller
+path and http.Method -> Controller.func
+*/
 func Router(path string, c ControllerInterface, mappingMethods ...string) {
 	for _, v := range mappingMethods {
 		mappings := make(map[string]reflect.Value)
@@ -94,10 +99,6 @@ func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflec
 */
 func dispatch(rw http.ResponseWriter, r *http.Request) {
 
-	var mapping, mappingMethod string
-
-	//m := r.Method
-
 	uri := r.RequestURI
 
 	reqUri := parseURI(uri)
@@ -112,24 +113,24 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	mapping = reqUri.Mapping
-	mappingMethod = reqUri.Method
-
-	ci := getHandler(mapping)
+	mapping := reqUri.Mapping
+	//mappingMethod := reqUri.Method
+	method := getHandleMethod(mapping, r.Method)
 
 	// handler is nil, give a default handler
-	if ci == nil {
-		rw.Write([]byte("there is no mapping handler found."))
+	if method.Kind() != reflect.Func {
+		rw.Write([]byte("there is no mapping method found."))
 		return
 	}
 
-	ci.Init(&context.Context{
-		ResponseWriter: rw,
-		Request:        r,
-		RequestUri:     reqUri,
-	})
+	args := make([]reflect.Value, 0)
+	method.Call(args)
 
-	getValue := reflect.ValueOf(ci)
+	//ci.Init(&context.Context{
+	//	ResponseWriter: rw,
+	//	Request:        r,
+	//	RequestUri:     reqUri,
+	//})
 
 	// 一定要指定参数为正确的方法名
 	// 2. 先看看带有参数的调用方法
@@ -139,15 +140,12 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 
 	// 一定要指定参数为正确的方法名
 	// 3. 再看看无参数的调用方法
-	methodValue := getValue.MethodByName(utils.UpFirstLetter(mappingMethod))
-
-	if methodValue.Kind() != reflect.Func {
-		rw.Write([]byte("there is no mapping method found."))
-		return
-	}
-
-	args := make([]reflect.Value, 0)
-	methodValue.Call(args)
+	//methodValue := getValue.MethodByName(utils.UpFirstLetter(mappingMethod))
+	//
+	//if methodValue.Kind() != reflect.Func {
+	//	rw.Write([]byte("there is no mapping method found."))
+	//	return
+	//}
 
 	//fmt.Printf("hello world, %s, %s", m, uri)
 	//rw.Write([]byte("hello world!"))

@@ -43,57 +43,6 @@ func Run() {
 	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
 }
 
-func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	c.Handler.ServeHTTP(rw, r)
-}
-
-func (c *Controller) Input() url.Values {
-	if c.Ctx.Request.Form == nil {
-		c.Ctx.Request.ParseForm()
-	}
-	return c.Ctx.Request.Form
-}
-
-/**
-add mappings
-path -> Controller
-path and http.Method -> Controller.func
-*/
-func Router(path string, c ControllerInterface, mappingMethods ...string) {
-	for _, v := range mappingMethods {
-		mappings := make(map[string]reflect.Value)
-
-		if strings.Contains(v, ",") {
-			m := strings.Split(v, ",")
-			for _, e := range m {
-				n := strings.Split(e, ":")
-
-				mappingMethod(c, n, mappings)
-			}
-		} else {
-			n := strings.Split(v, ":")
-			mappingMethod(c, n, mappings)
-		}
-
-		gApp.methodMappings[path] = mappings
-	}
-	gApp.mappings[path] = c
-}
-
-/**
-(path and http.Method) -> func mappings
-*/
-func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflect.Value) {
-	handle := reflect.ValueOf(c)
-	handleMethod := handle.MethodByName(utils.UpFirstLetter(n[1]))
-	if handleMethod.Kind() == reflect.Func {
-
-		mappings[n[0]] = handleMethod
-	} else {
-		// TODO error mapping method(path, n[0], n[1])
-	}
-}
-
 /**
   call this method
 */
@@ -150,6 +99,58 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	//fmt.Printf("hello world, %s, %s", m, uri)
 	//rw.Write([]byte("hello world!"))
 }
+
+func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	c.Handler.ServeHTTP(rw, r)
+}
+
+func (c *Controller) Input() url.Values {
+	if c.Ctx.Request.Form == nil {
+		c.Ctx.Request.ParseForm()
+	}
+	return c.Ctx.Request.Form
+}
+
+/**
+add mappings
+path -> Controller
+path and http.Method -> Controller.func
+*/
+func Router(path string, c ControllerInterface, mappingMethods ...string) {
+	for _, v := range mappingMethods {
+		mappings := make(map[string]reflect.Value)
+
+		if strings.Contains(v, ",") {
+			m := strings.Split(v, ",")
+			for _, e := range m {
+				n := strings.Split(e, ":")
+
+				mappingMethod(c, n, mappings)
+			}
+		} else {
+			n := strings.Split(v, ":")
+			mappingMethod(c, n, mappings)
+		}
+
+		gApp.methodMappings[path] = mappings
+	}
+	gApp.mappings[path] = c
+}
+
+/**
+(path and http.Method) -> func mappings
+*/
+func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflect.Value) {
+	handle := reflect.ValueOf(c)
+	handleMethod := handle.MethodByName(utils.UpFirstLetter(n[1]))
+	if handleMethod.Kind() == reflect.Func {
+
+		mappings[n[0]] = handleMethod
+	} else {
+		// TODO error mapping method(path, n[0], n[1])
+	}
+}
+
 
 func (c *Controller) Get() {
 }
@@ -210,6 +211,9 @@ func parseURI(uri string) *context.RequestUri {
 	return r
 }
 
+/**
+将键值对转化为map对象
+ */
 func parseParam(p string) map[string]string {
 	rp := strings.Split(p, "&")
 	rpm := make(map[string]string, 3)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gweb"
 	_ "gweb/cmd/router"
 )
@@ -14,6 +13,5 @@ func main() {
 	////http.Handle("/", http.FileServer(http.Dir("controller")))
 	//http.ListenAndServe(":8080", router)
 
-	fmt.Println("")
 	gweb.Run()
 }

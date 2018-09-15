@@ -7,6 +7,7 @@ import (
 	"gweb/utils"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -18,14 +19,6 @@ type ControllerInterface interface {
 	Put()
 	Delete()
 	Init(ctx *context.Context)
-}
-
-type requestURI struct {
-	contextPath   string
-	mapping       string
-	method        string
-	pathParams    []string
-	requestParams map[string]string
 }
 
 type Controller struct {
@@ -54,6 +47,17 @@ func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	c.Handler.ServeHTTP(rw, r)
 }
 
+func (c *Controller) Input() url.Values {
+	if c.Ctx.Request.Form == nil {
+		c.Ctx.Request.ParseForm()
+	}
+	return c.Ctx.Request.Form
+}
+
+func Router(path string, c ControllerInterface, mappingMethods ...string) {
+	Add(path, c)
+}
+
 /**
   call this method
 */
@@ -70,15 +74,15 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	p := conf.GetContextPath()
 
 	if p != "" {
-		if p != reqUri.contextPath {
+		if p != reqUri.ContextPath {
 			rw.WriteHeader(404)
 			rw.Write([]byte("找不到页面"))
 			return
 		}
 	}
 
-	mapping = reqUri.mapping
-	mappingMethod = reqUri.method
+	mapping = reqUri.Mapping
+	mappingMethod = reqUri.Method
 
 	ci := getHandler(mapping)
 
@@ -88,7 +92,11 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ci.Init(&context.Context{ResponseWriter: rw})
+	ci.Init(&context.Context{
+		ResponseWriter: rw,
+		Request:        r,
+		RequestUri:     reqUri,
+	})
 
 	getValue := reflect.ValueOf(ci)
 
@@ -133,42 +141,52 @@ func (c *Controller) Init(ctx *context.Context) {
 	c.Ctx = ctx
 }
 
-func Router(path string, c ControllerInterface, mappingMethods ...string) {
-	Add(path, c)
-}
-
-func parseURI(uri string) *requestURI {
+func parseURI(uri string) *context.RequestUri {
 	uris := strings.Split(uri, "/")
 
 	uris = uris[1:]
-	r := &requestURI{}
+	r := &context.RequestUri{}
 
-	r.contextPath = "/" + uris[0]
+	r.ContextPath = "/" + uris[0]
 
 	if len(uris) > 1 {
-		r.mapping = "/" + uris[1]
+		r.Mapping = "/" + uris[1]
 	}
 
 	if len(uris) > 2 {
-		r.method = uris[2]
-	}
-
-	if len(uris) > 3 {
-		tail := uris[len(uris)-1]
-		if strings.Contains(tail, "?") {
-			r.pathParams = uris[3 : len(uris)-1]
-			rp := strings.Split(tail, "&")
-			rpm := make(map[string]string, 3)
-			for _, v := range rp {
-				pv := strings.Split(v, "=")
-				rpm[pv[0]] = pv[1]
-			}
-
-			r.requestParams = rpm
+		r.Method = uris[2]
+		if strings.Contains(r.Method, "?") {
+			s := strings.Split(r.Method, "?")
+			r.Method = s[0]
+			rpm := parseParam(s[1])
+			r.RequestParams = rpm
 		} else {
-			r.pathParams = uris[3:]
+			if len(uris) > 3 {
+				tail := uris[len(uris)-1]
+				r.PathParams = uris[3 : len(uris)-1]
+
+				if strings.Contains(tail, "?") {
+					s := strings.Split(tail, "?")
+
+					r.PathParams = append(r.PathParams, s[0])
+
+					r.RequestParams = parseParam(s[1])
+				} else {
+					r.PathParams = uris[3:]
+				}
+			}
 		}
 	}
 
 	return r
+}
+
+func parseParam(p string) map[string]string {
+	rp := strings.Split(p, "&")
+	rpm := make(map[string]string, 3)
+	for _, v := range rp {
+		pv := strings.Split(v, "=")
+		rpm[pv[0]] = pv[1]
+	}
+	return rpm
 }

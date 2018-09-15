@@ -167,8 +167,8 @@ func (c *Controller) Delete() {
 
 }
 
-func (c *Controller) Init(ctx *context.Context) {
-	c.Ctx = ctx
+func (this *Controller) Init(ctx *context.Context) {
+	this.Ctx = ctx
 }
 
 func parseURI(uri string) *context.RequestUri {

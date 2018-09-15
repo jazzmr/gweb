@@ -9,15 +9,15 @@ type HelloController struct {
 	gweb.Controller
 }
 
-func (c *HelloController) Hello() {
+func (this *HelloController) Hello() {
 
-	fmt.Println(c.Input().Get("haha"))
+	fmt.Println(this.Input().Get("haha"))
 
-	fmt.Println("haha: " + c.Ctx.RequestUri.RequestParams["haha"])
+	fmt.Println("haha: " + this.Ctx.RequestUri.RequestParams["haha"])
 
-	c.Ctx.WriteString("hello world")
+	this.Ctx.WriteString("hello world")
 }
 
-func (c *HelloController) Get() {
+func (this *HelloController) Get() {
 	fmt.Println("hello controller Get")
 }

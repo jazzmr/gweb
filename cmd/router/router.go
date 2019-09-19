@@ -7,6 +7,6 @@ import (
 )
 
 func init() {
-	gweb.Router("/hello", &controller.HelloController{}, ":Hello", "GET:Hello,DELETE:Delete", "POST:PutHello")
+	gweb.Router("/hello", &controller.HelloController{}, "GET:Hello")
 	fmt.Println("register helloController... ...")
 }

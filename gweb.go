@@ -40,7 +40,8 @@ func Run() {
 	}
 
 	log.Println("gweb start success ... ...")
-	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
+	e := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
+	log.Print("e : ", e)
 }
 
 /**
@@ -112,32 +113,6 @@ func (c *Controller) Input() url.Values {
 }
 
 /**
-add mappings
-path -> Controller
-path and http.Method -> Controller.func
-*/
-func Router(path string, c ControllerInterface, mappingMethods ...string) {
-	for _, v := range mappingMethods {
-		mappings := make(map[string]reflect.Value)
-
-		if strings.Contains(v, ",") {
-			m := strings.Split(v, ",")
-			for _, e := range m {
-				n := strings.Split(e, ":")
-
-				mappingMethod(c, n, mappings)
-			}
-		} else {
-			n := strings.Split(v, ":")
-			mappingMethod(c, n, mappings)
-		}
-
-		gApp.methodMappings[path] = mappings
-	}
-	gApp.mappings[path] = c
-}
-
-/**
 (path and http.Method) -> func mappings
 */
 func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflect.Value) {
@@ -150,7 +125,6 @@ func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflec
 		// TODO error mapping method(path, n[0], n[1])
 	}
 }
-
 
 func (c *Controller) Get() {
 }
@@ -167,8 +141,8 @@ func (c *Controller) Delete() {
 
 }
 
-func (this *Controller) Init(ctx *context.Context) {
-	this.Ctx = ctx
+func (c *Controller) Init(ctx *context.Context) {
+	c.Ctx = ctx
 }
 
 func parseURI(uri string) *context.RequestUri {
@@ -213,7 +187,7 @@ func parseURI(uri string) *context.RequestUri {
 
 /**
 将键值对转化为map对象
- */
+*/
 func parseParam(p string) map[string]string {
 	rp := strings.Split(p, "&")
 	rpm := make(map[string]string, 3)

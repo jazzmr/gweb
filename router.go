@@ -1,6 +1,11 @@
 package gweb
 
 import (
+	"fmt"
+	"gweb/conf"
+	"gweb/context"
+	"log"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -10,6 +15,86 @@ type ControllerInfo struct {
 	controllerType reflect.Type
 	methods        map[string]string
 	initialize     func() ControllerInterface
+}
+
+type ControllerRegister struct {
+	Handler http.Handler
+	Pattern string
+}
+
+func (c *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	c.Handler.ServeHTTP(rw, r)
+}
+
+func Run() {
+	config := conf.GetConfig()
+
+	log.Println(config.Server)
+
+	h := &ControllerRegister{
+		Handler: http.HandlerFunc(dispatch),
+		Pattern: "localhost",
+	}
+
+	log.Println("gweb start success ... ...")
+	e := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
+	log.Print("e : ", e)
+}
+
+/**
+  call this method
+*/
+func dispatch(rw http.ResponseWriter, r *http.Request) {
+
+	uri := r.RequestURI
+
+	reqUri := parseURI(uri)
+
+	p := conf.GetContextPath()
+
+	if p != "" {
+		if p != reqUri.ContextPath {
+			rw.WriteHeader(404)
+			context.WriterString(rw, "找不到页面!")
+			return
+		}
+	}
+
+	mapping := reqUri.Mapping
+	// method -> controllerInfo
+	controllerInfo, ok := findRouter(mapping)
+	if !ok {
+		context.WriterString(rw, "找不到对应的处理类信息!")
+		return
+	}
+
+	method, ok := controllerInfo.methods[r.Method]
+	if !ok {
+		context.WriterString(rw, "找不到对应的处理方法!")
+		return
+	}
+
+	controllerInterface := controllerInfo.initialize()
+
+	_context := &context.Context{
+		Request:        r,
+		ResponseWriter: rw,
+		RequestUri:     reqUri,
+	}
+	controllerInterface.Init(_context)
+
+	vc := reflect.ValueOf(controllerInterface)
+	runMethod := vc.MethodByName(method)
+	ret := runMethod.Call(nil)
+
+	var retString string
+	for _, v := range ret {
+		retString += v.Interface().(string)
+	}
+
+	context.WriterString(rw, retString)
+
+	log.Println("ret : ", ret)
 }
 
 /**
@@ -43,6 +128,9 @@ func Router(path string, c ControllerInterface, mappingMethods ...string) {
 	gApp.mappings[path] = route
 }
 
+/**
+find ControllerInfo
+*/
 func findRouter(path string) (controllerInfo *ControllerInfo, isFind bool) {
 	if t, ok := gApp.mappings[path]; ok {
 		return t, ok

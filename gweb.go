@@ -1,15 +1,9 @@
 package gweb
 
 import (
-	"fmt"
-	"gweb/conf"
 	"gweb/context"
-	"log"
-	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
-	"time"
 )
 
 type ControllerInterface interface {
@@ -21,86 +15,7 @@ type ControllerInterface interface {
 }
 
 type Controller struct {
-	Handler http.Handler
-	Pattern string
-	Ctx     *context.Context
-}
-
-func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	c.Handler.ServeHTTP(rw, r)
-}
-
-func Run() {
-	config := conf.GetConfig()
-
-	time.Sleep(1 * time.Second)
-
-	fmt.Println(config.Server)
-
-	h := &Controller{
-		Handler: http.HandlerFunc(dispatch),
-		Pattern: "localhost",
-	}
-
-	log.Println("gweb start success ... ...")
-	e := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
-	log.Print("e : ", e)
-}
-
-/**
-  call this method
-*/
-func dispatch(rw http.ResponseWriter, r *http.Request) {
-
-	uri := r.RequestURI
-
-	reqUri := parseURI(uri)
-
-	p := conf.GetContextPath()
-
-	if p != "" {
-		if p != reqUri.ContextPath {
-			rw.WriteHeader(404)
-			context.WriterString(rw, "找不到页面!")
-			return
-		}
-	}
-
-	mapping := reqUri.Mapping
-	//mappingMethod := reqUri.Method
-	controllerInfo, ok := findRouter(mapping)
-	if !ok {
-		context.WriterString(rw, "找不到对应的处理类信息!")
-		return
-	}
-
-	method, ok := controllerInfo.methods[r.Method]
-	if !ok {
-		context.WriterString(rw, "找不到对应的处理方法!")
-		return
-	}
-
-	controllerInterface := controllerInfo.initialize()
-
-	_context := &context.Context{
-		Request:        r,
-		ResponseWriter: rw,
-		RequestUri:     reqUri,
-	}
-	controllerInterface.Init(_context)
-
-	vc := reflect.ValueOf(controllerInterface)
-	runMethod := vc.MethodByName(method)
-	ret := runMethod.Call(nil)
-
-	var retString string
-	for _, v := range ret {
-		retString += v.Interface().(string)
-	}
-
-	context.WriterString(rw, retString)
-
-	log.Println("ret : ", ret)
+	Ctx *context.Context
 }
 
 func (c *Controller) Input() url.Values {

@@ -3,8 +3,10 @@ package gweb
 import (
 	"fmt"
 	"gweb/conf"
+	"gweb/context"
 	"log"
 	"net/http"
+	"sync"
 )
 
 type App struct {
@@ -19,8 +21,13 @@ var (
 func init() {
 	gApp = &App{
 		Handler: &ControllerRegister{
-			Handler: http.HandlerFunc(dispatch),
+			Handler: http.HandlerFunc(nil),
 			Pattern: "localhost",
+			CxtPool: sync.Pool{
+				New: func() interface{} {
+					return context.NewContext()
+				},
+			},
 		},
 		mappings: make(map[string]*ControllerInfo),
 	}

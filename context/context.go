@@ -16,8 +16,21 @@ type Context struct {
 	Request        *http.Request
 }
 
-func (con *Context) WriteString(str string) {
-	WriterString(con.ResponseWriter, str)
+func (ctx *Context) Reset(w http.ResponseWriter, r *http.Request, uri *RequestUri) {
+	ctx.Request = r
+	ctx.ResponseWriter = w
+	ctx.RequestUri = uri
+}
+
+func (ctx *Context) WriteString(str string) {
+	WriterString(ctx.ResponseWriter, str)
+}
+
+/**
+create a new empty context
+*/
+func NewContext() *Context {
+	return &Context{}
 }
 
 func WriterString(w http.ResponseWriter, str string) {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 type ControllerInfo struct {
@@ -19,17 +20,11 @@ type ControllerInfo struct {
 type ControllerRegister struct {
 	Handler http.Handler
 	Pattern string
+	CxtPool sync.Pool
 }
 
 func (c *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	c.Handler.ServeHTTP(rw, r)
-}
-
-/**
-  call this method
-*/
-func dispatch(rw http.ResponseWriter, r *http.Request) {
-
+	//c.Handler.ServeHTTP(rw, r)
 	uri := r.RequestURI
 
 	reqUri := parseURI(uri)
@@ -60,11 +55,12 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 
 	controllerInterface := controllerInfo.initialize()
 
-	_context := &context.Context{
-		Request:        r,
-		ResponseWriter: rw,
-		RequestUri:     reqUri,
-	}
+	_context := c.CxtPool.Get().(*context.Context)
+	_context.Reset(rw, r, reqUri)
+
+	// 重新放回缓存池
+	defer c.CxtPool.Put(_context)
+
 	controllerInterface.Init(_context)
 
 	vc := reflect.ValueOf(controllerInterface)
@@ -79,6 +75,14 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	context.WriterString(rw, retString)
 
 	log.Println("ret : ", ret)
+}
+
+/**
+  call this method
+  duplicated
+*/
+func dispatch(rw http.ResponseWriter, r *http.Request) {
+
 }
 
 /**

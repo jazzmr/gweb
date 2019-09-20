@@ -2,25 +2,23 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
+	"gweb"
 	"strings"
 )
 
 type LoginController struct {
+	gweb.Controller
 }
 
-func (c *LoginController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *LoginController) Login() {
 
-	if strings.Contains(r.RequestURI, "test1") {
+	a := c.Input().Get("a")
+
+	if strings.Contains(a, "a") {
 		goto testGoto
 	}
 	fmt.Println("test")
-	w.WriteHeader(200)
-	w.Write([]byte("hello gweb!"))
 
 testGoto:
 	fmt.Println("testGoto")
-
-	w.WriteHeader(200)
-	w.Write([]byte("hello testGoto!"))
 }

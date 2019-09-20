@@ -9,17 +9,17 @@ import (
 	"sync"
 )
 
-type App struct {
+type _App struct {
 	Handler  *ControllerRegister
 	mappings map[string]*ControllerInfo
 }
 
 var (
-	gApp *App
+	gApp *_App
 )
 
 func init() {
-	gApp = &App{
+	gApp = &_App{
 		Handler: &ControllerRegister{
 			Handler: http.HandlerFunc(nil),
 			Pattern: "localhost",

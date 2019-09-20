@@ -1,6 +1,7 @@
 package context
 
 import (
+	"gweb"
 	"net/http"
 )
 
@@ -19,5 +20,5 @@ type Context struct {
 }
 
 func (con *Context) WriteString(str string) {
-	con.ResponseWriter.Write([]byte(str))
+	gweb.WriterString(con.ResponseWriter, str)
 }

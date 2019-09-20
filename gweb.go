@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gweb/conf"
 	"gweb/context"
-	"gweb/utils"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,6 +24,10 @@ type Controller struct {
 	Handler http.Handler
 	Pattern string
 	Ctx     *context.Context
+}
+
+func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	c.Handler.ServeHTTP(rw, r)
 }
 
 func Run() {
@@ -58,7 +61,7 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	if p != "" {
 		if p != reqUri.ContextPath {
 			rw.WriteHeader(404)
-			rw.Write([]byte("找不到页面"))
+			WriterString(rw, "找不到页面!")
 			return
 		}
 	}
@@ -67,15 +70,13 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 	//mappingMethod := reqUri.Method
 	controllerInfo, ok := findRouter(mapping)
 	if !ok {
-		// TODO 找不到对应的处理类信息
-		rw.Write([]byte("找不到对应的处理类信息!"))
+		WriterString(rw, "找不到对应的处理类信息!")
 		return
 	}
 
 	method, ok := controllerInfo.methods[r.Method]
 	if !ok {
-		// TODO 找不到对应的处理方法
-		rw.Write([]byte("找不到对应的处理方法!"))
+		WriterString(rw, "找不到对应的处理方法!")
 		return
 	}
 
@@ -90,14 +91,16 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 
 	vc := reflect.ValueOf(controllerInterface)
 	runMethod := vc.MethodByName(method)
-	//in := param.ConvertParams(methodParams, method.Type(), context)
-	out := runMethod.Call(nil)
+	ret := runMethod.Call(nil)
 
-	log.Println(out)
-}
+	var retString string
+	for _, v := range ret {
+		retString += v.Interface().(string)
+	}
 
-func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	c.Handler.ServeHTTP(rw, r)
+	WriterString(rw, retString)
+
+	log.Println("ret : ", ret)
 }
 
 func (c *Controller) Input() url.Values {
@@ -107,17 +110,10 @@ func (c *Controller) Input() url.Values {
 	return c.Ctx.Request.Form
 }
 
-/**
-(path and http.Method) -> func mappings
-*/
-func mappingMethod(c ControllerInterface, n []string, mappings map[string]reflect.Value) {
-	handle := reflect.ValueOf(c)
-	handleMethod := handle.MethodByName(utils.UpFirstLetter(n[1]))
-	if handleMethod.Kind() == reflect.Func {
-
-		mappings[n[0]] = handleMethod
-	} else {
-		// TODO error mapping method(path, n[0], n[1])
+func WriterString(w http.ResponseWriter, str string) {
+	_, e := w.Write([]byte(str))
+	if e != nil {
+		log.Printf("返回前端数据出现异常：%s", e.Error())
 	}
 }
 

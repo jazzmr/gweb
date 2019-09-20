@@ -15,9 +15,9 @@ func (c *HelloController) Hello() string {
 
 	fmt.Println("haha: " + c.Ctx.RequestUri.RequestParams["haha"])
 
-	c.Ctx.WriteString("hello world")
+	//c.Ctx.WriteString("hello world")
 
-	return "ret value"
+	return "ret value : hello world"
 }
 
 func (c *HelloController) Get() {

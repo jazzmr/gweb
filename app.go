@@ -3,7 +3,7 @@ package gweb
 import "reflect"
 
 type App struct {
-	mappings       map[string]ControllerInterface
+	mappings       map[string]*ControllerInfo
 	methodMappings map[string]map[string]reflect.Value
 }
 
@@ -13,7 +13,7 @@ var (
 
 func init() {
 	gApp = &App{
-		mappings:       make(map[string]ControllerInterface),
+		mappings:       make(map[string]*ControllerInfo),
 		methodMappings: make(map[string]map[string]reflect.Value),
 	}
 }

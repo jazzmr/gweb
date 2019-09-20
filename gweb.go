@@ -65,40 +65,35 @@ func dispatch(rw http.ResponseWriter, r *http.Request) {
 
 	mapping := reqUri.Mapping
 	//mappingMethod := reqUri.Method
-	method := getHandleMethod(mapping, r.Method)
-
-	// handler is nil, give a default handler
-	if method.Kind() != reflect.Func {
-		rw.Write([]byte("there is no mapping method found."))
+	controllerInfo, ok := findRouter(mapping)
+	if !ok {
+		// TODO 找不到对应的处理类信息
+		rw.Write([]byte("找不到对应的处理类信息!"))
 		return
 	}
 
-	args := make([]reflect.Value, 0)
-	method.Call(args)
+	method, ok := controllerInfo.methods[r.Method]
+	if !ok {
+		// TODO 找不到对应的处理方法
+		rw.Write([]byte("找不到对应的处理方法!"))
+		return
+	}
 
-	//ci.Init(&context.Context{
-	//	ResponseWriter: rw,
-	//	Request:        r,
-	//	RequestUri:     reqUri,
-	//})
+	controllerInterface := controllerInfo.initialize()
 
-	// 一定要指定参数为正确的方法名
-	// 2. 先看看带有参数的调用方法
-	//methodValue := getValue.MethodByName("ReflectCallFuncHasArgs")
-	//args := []reflect.Value{reflect.ValueOf("wudebao"), reflect.ValueOf(30)}
-	//methodValue.Call(args)
+	_context := &context.Context{
+		Request:        r,
+		ResponseWriter: rw,
+		RequestUri:     reqUri,
+	}
+	controllerInterface.Init(_context)
 
-	// 一定要指定参数为正确的方法名
-	// 3. 再看看无参数的调用方法
-	//methodValue := getValue.MethodByName(utils.UpFirstLetter(mappingMethod))
-	//
-	//if methodValue.Kind() != reflect.Func {
-	//	rw.Write([]byte("there is no mapping method found."))
-	//	return
-	//}
+	vc := reflect.ValueOf(controllerInterface)
+	runMethod := vc.MethodByName(method)
+	//in := param.ConvertParams(methodParams, method.Type(), context)
+	out := runMethod.Call(nil)
 
-	//fmt.Printf("hello world, %s, %s", m, uri)
-	//rw.Write([]byte("hello world!"))
+	log.Println(out)
 }
 
 func (c *Controller) ServeHTTP(rw http.ResponseWriter, r *http.Request) {

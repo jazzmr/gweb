@@ -78,14 +78,6 @@ func (c *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 }
 
 /**
-  call this method
-  duplicated
-*/
-func dispatch(rw http.ResponseWriter, r *http.Request) {
-
-}
-
-/**
 add mappings
 path -> ControllerInfo
 */

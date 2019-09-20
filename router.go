@@ -61,7 +61,7 @@ func (c *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// 重新放回缓存池
 	defer c.CxtPool.Put(_context)
 
-	controllerInterface.Init(_context)
+	controllerInterface.initCtx(_context)
 
 	vc := reflect.ValueOf(controllerInterface)
 	runMethod := vc.MethodByName(method)

@@ -11,7 +11,7 @@ type ControllerInterface interface {
 	Post()
 	Put()
 	Delete()
-	Init(ctx *context.Context)
+	initCtx(ctx *context.Context)
 }
 
 type Controller struct {
@@ -40,7 +40,7 @@ func (c *Controller) Delete() {
 
 }
 
-func (c *Controller) Init(ctx *context.Context) {
+func (c *Controller) initCtx(ctx *context.Context) {
 	c.Ctx = ctx
 }
 

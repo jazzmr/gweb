@@ -1,7 +1,6 @@
 package gweb
 
 import (
-	"fmt"
 	"gweb/conf"
 	"gweb/context"
 	"log"
@@ -24,21 +23,6 @@ type ControllerRegister struct {
 
 func (c *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	c.Handler.ServeHTTP(rw, r)
-}
-
-func Run() {
-	config := conf.GetConfig()
-
-	log.Println(config.Server)
-
-	h := &ControllerRegister{
-		Handler: http.HandlerFunc(dispatch),
-		Pattern: "localhost",
-	}
-
-	log.Println("gweb start success ... ...")
-	e := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), h)
-	log.Print("e : ", e)
 }
 
 /**

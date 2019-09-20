@@ -1,10 +1,15 @@
 package gweb
 
-import "reflect"
+import (
+	"fmt"
+	"gweb/conf"
+	"log"
+	"net/http"
+)
 
 type App struct {
-	mappings       map[string]*ControllerInfo
-	methodMappings map[string]map[string]reflect.Value
+	Handler  *ControllerRegister
+	mappings map[string]*ControllerInfo
 }
 
 var (
@@ -13,18 +18,20 @@ var (
 
 func init() {
 	gApp = &App{
-		mappings:       make(map[string]*ControllerInfo),
-		methodMappings: make(map[string]map[string]reflect.Value),
+		Handler: &ControllerRegister{
+			Handler: http.HandlerFunc(dispatch),
+			Pattern: "localhost",
+		},
+		mappings: make(map[string]*ControllerInfo),
 	}
 }
 
-func getHandleMethod(path, httpMethod string) reflect.Value {
-	if path == "" {
-		return reflect.Value{}
-	}
+func Run() {
+	config := conf.GetConfig()
 
-	if v, ok := gApp.methodMappings[path]; ok {
-		return v[httpMethod]
-	}
-	return reflect.Value{}
+	log.Println(config.Server)
+	log.Println("gweb start success ... ...")
+
+	e := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), gApp.Handler)
+	log.Print("e : ", e)
 }

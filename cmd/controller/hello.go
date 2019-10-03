@@ -18,7 +18,7 @@ func (c *HelloController) Hello() string {
 
 	//c.Ctx.WriteString("hello world")
 
-	return "ret value : hello world"
+	return "<html> <head> </head> <body> <font color='red'> ret value : hello world </font> </body></html>"
 }
 
 func (c *HelloController) Get() {

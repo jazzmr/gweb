@@ -20,7 +20,7 @@ type Controller struct {
 
 func (c *Controller) Input() url.Values {
 	if c.Ctx.Request.Form == nil {
-		c.Ctx.Request.ParseForm()
+		_ = c.Ctx.Request.ParseForm()
 	}
 	return c.Ctx.Request.Form
 }
